@@ -2,73 +2,72 @@ package javadb;
 
 import java.sql.*;
 
-public class DatabaseManager {
-
+public class DatabaseConnection {
     private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String DATABASE_URL = "jdbc:mysql://127.0.0.1/TugasPBO";
-    private static final String DATABASE_USER = "root";
-    private static final String DATABASE_PASSWORD = "";
+    private static final String DB_URL = "jdbc:mysql://127.0.0.1/penjualan";
+    private static final String USER = "root";
+    private static final String PASSWORD = "";
 
     private static Connection connection;
+    private static Statement statement;
+    private static ResultSet resultSet;
 
     public static void main(String[] args) {
-        try {
-            connectToDatabase();
-            insertProductData();
-            displayProductData();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            closeConnection();
-        }
+        addData();
+        displayData();
     }
 
-    private static void connectToDatabase() throws ClassNotFoundException, SQLException {
-        Class.forName(JDBC_DRIVER);
-        connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
-    }
-
-    private static void insertProductData() throws SQLException {
+    public static void addData() {
         String productCode = "brg17";
         String productName = "Mie Goreng";
         String unit = "Bungkus";
         int stock = 40;
-        int minimumStock = 1;
+        int minStock = 1;
 
-        String sql = "INSERT INTO barang (kd_brg, nm_brg, satuan, stok_brg, stok_min) VALUES (?, ?, ?, ?, ?)";
-        PreparedStatement statement = connection.prepareStatement(sql);
+        try {
+            Class.forName(JDBC_DRIVER);
+            connection = DriverManager.getConnection(DB_URL, USER, PASSWORD);
+            String query = "INSERT INTO barang (kd_brg, nm_brg, satuan, stok_brg, stok_min) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
 
-        statement.setString(1, productCode);
-        statement.setString(2, productName);
-        statement.setString(3, unit);
-        statement.setInt(4, stock);
-        statement.setInt(5, minimumStock);
+            preparedStatement.setString(1, productCode);
+            preparedStatement.setString(2, productName);
+            preparedStatement.setString(3, unit);
+            preparedStatement.setInt(4, stock);
+            preparedStatement.setInt(5, minStock);
 
-        statement.execute();
-    }
+            preparedStatement.executeUpdate();
 
-    private static void displayProductData() throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM barang");
-
-        int counter = 1;
-        while (resultSet.next()) {
-            System.out.println("Data ke-" + counter);
-            System.out.println("Kode Barang: " + resultSet.getString("kd_brg"));
-            System.out.println("Nama Barang: " + resultSet.getString("nm_brg"));
-            System.out.println("Satuan: " + resultSet.getString("satuan"));
-            System.out.println("Stok: " + resultSet.getInt("stok_brg"));
-            System.out.println("Stok minimal: " + resultSet.getInt("stok_min"));
-            counter++;
-        }
-
-        resultSet.close();
-        statement.close();
-    }
-
-    private static void closeConnection() throws SQLException {
-        if (connection != null) {
+            preparedStatement.close();
             connection.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void displayData() {
+        try {
+            Class.forName(JDBC_DRIVER);
+            connection = DriverManager.getConnection(DB_URL, USER, PASSWORD);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("SELECT * FROM barang");
+
+            int count = 1;
+            while (resultSet.next()) {
+                System.out.println("Record #" + count);
+                System.out.println("Product Code: " + resultSet.getString("kd_brg"));
+                System.out.println("Product Name: " + resultSet.getString("nm_brg"));
+                System.out.println("Unit: " + resultSet.getString("satuan"));
+                System.out.println("Stock: " + resultSet.getInt("stok_brg"));
+                System.out.println("Minimum Stock: " + resultSet.getInt("stok_min"));
+                count++;
+            }
+
+            resultSet.close();
+            statement.close();
+            connection.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
